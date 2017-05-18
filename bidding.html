@@ -1,8 +1,8 @@
 <html>
   <head>
     <title>Header Bidding - Prebid.js - Test</title>
-     <script> 
-      var PREBID_TIMEOUT = 2000; // auction timeout, in milliseconds. Normally 750-1500ms
+    <script> 
+      var PREBID_TIMEOUT = 10000; // auction timeout, in milliseconds. Normally 750-1500ms
       var MAX_RETRIES = 20;
       
       var pbjs = pbjs || {};
@@ -10,10 +10,12 @@
       pbjs.retries = 0;
       var googletag = googletag || {};
       googletag.cmd = googletag.cmd || [];
+
       // stop DFP from filling the slots immediately
       googletag.cmd.push(function() {
         googletag.pubads().disableInitialLoad();
       });
+
       // and trigger DFP once we've given it the auction winner info
       function initAdserver() {
         if (pbjs.initAdserverSet) return;
@@ -30,8 +32,10 @@
         });
         pbjs.initAdserverSet = true;
       }
+
       // if the auction doesn't finish before the timeout, trigger DFP anyway
       setTimeout(initAdserver, PREBID_TIMEOUT);
+
       // load prebid.js wrapper asynchronously
       (function () {
           var d = document;
@@ -42,7 +46,7 @@
           target.insertBefore(pbs, target.firstChild);
       })();
       
-      // load GPT (DFP) library asynchronously
+      // load GPT (DFP) library 
       (function () {
           var gads = document.createElement('script');
           // gads.async = true;
@@ -54,7 +58,7 @@
           node.parentNode.insertBefore(gads, node);
       })();
       
-      // configure Prebid wrappper - enqueue an anonymous setup function to be executed once it is loaded
+      // configure Prebid wrappper - enqueue an anonymous function to be executed once it is loaded
       pbjs.que.push(function() {
       
         // set bid granularity (rounding of bids down to 10c intervals from $0 to $20)
@@ -66,11 +70,23 @@
           }]
         };
         pbjs.setPriceGranularity(customGranularity);
-        /*
-          TODO: tell the wrapper and DFP about your specific inventory on this page.
-          Copy/paste the code inside the <script> tags from
-          from https://github.com/barneytest/barneytest.github.io/blob/master/bidding-template-3.html
-        */
+
+        // Tell the wrapper about your inventory
+        var adUnits = [{
+          code: 'div-gpt-ad-1486479040361-0',
+          sizes: [[300, 250]],
+          bids: [{
+            bidder: 'audienceNetwork',
+            params: {
+              // your placement ID here
+              placementId: '750848648421754_750854528421166',
+              tagVersion: '5.5.web',
+              fullwidth: true,  // or native, 300x250, 320x50
+            }
+          }]
+        },];
+        pbjs.addAdUnits(adUnits);
+
         // kick off the auction
         pbjs.requestBids({
           bidsBackHandler: function (bidResponses) {
@@ -78,7 +94,7 @@
             initAdserver();
           }
         });
-        
+
         // give the wrapper each bidder's specific config for each ad slot
         pbjs.bidderSettings = {
           audienceNetwork: {
@@ -115,36 +131,14 @@
           },
         };	
       });
-       
-            /*
-          These two blocks tell the wrapper and DFP about the inventory on your page
-          Paste it into the wrapper javascript in the <head> of your page
-          And update the placement ID with your specific placement
-        */
-        var adUnits = [{
-          code: 'div-gpt-ad-1486479040361-0',
-          sizes: [[300, 250]],
-          bids: [{
-            bidder: 'audienceNetwork',
-            params: {
-              placementId: '750848648421754_750854528421166', // TODO: your placement ID
-              tagVersion: '5.5.web',
-              fullwidth: true,  // or native, 300x250, 320x50
-            }
-          }]
-        },];
 
-        // Tell DFP about the inventory we have on the page
-        googletag.cmd.push(function () {
-          googletag.defineSlot('/1023632/hb_300x250_LIG', [[300, 250]], 'div-gpt-ad-1486479040361-0').addService(googletag.pubads());
-          googletag.pubads().enableSingleRequest();
-          googletag.enableServices();
-        });
-       
-       
-       
+      // Tell DFP about the inventory we have on the page
+      googletag.cmd.push(function () {
+        googletag.defineSlot('/1023632/hb_300x250_LIG', [[300, 250]], 'div-gpt-ad-1486479040361-0').addService(googletag.pubads());
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+      });
     </script>
-    
   </head>
   <body>
     <h2>Header Bidding Test with Prebid.js</h2>
